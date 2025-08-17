@@ -2,9 +2,10 @@ import os
 import json
 import threading
 import numpy as np
+import cv2
 from tifffile import imwrite # Import imwrite
 from .interactive_editor import InteractiveEditor
-
+from skimage.color import label2rgb
 class CurationController:
     """
     Manages the labelling session. This version is backward-compatible with older scripts.
@@ -137,6 +138,24 @@ class CurationController:
         else: # mask mode
             masks = self.masks[self.idx]
             labels = self.labels[self.idx]
+            
+            # Create an overlay of the mask on the image
+            overlay_image = image.copy()
+            if masks is not None:
+                # Ensure the image is in a format that can be processed (e.g., uint8)
+                if image.dtype != np.uint8:
+                    image = (image / image.max() * 255).astype(np.uint8)
+
+                # Ensure masks and image have the same spatial dimensions
+                if masks.shape[:2] != image.shape[:2]:
+                    # Resize masks to match the image dimensions if they don't match
+                    masks = cv2.resize(masks, (image.shape[1], image.shape[0]), interpolation=cv2.INTER_NEAREST)
+
+                # Use skimage's label2rgb to overlay masks on the image
+                #overlay_image = label2rgb(masks, image=image, alpha=0.1, bg_label=0, kind='overlay')
+                # Convert overlay to uint8 for display
+                #overlay_image = (overlay_image * 255).astype(np.uint8)
+            
             self.editor.update_data(image, title, mode='mask', masks=masks, labels=labels)
             self.run_background_prediction()
 
