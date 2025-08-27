@@ -130,7 +130,6 @@ def main():
     # --- Phase 1: Batch Processing ---
     print("\n--- Batch processing started ---")
     data_for_curation = []
-    
     # Filter for common image file types
     valid_extensions = {".tif", ".tiff", ".png", ".jpg", ".jpeg"}
     files = sorted([
@@ -159,7 +158,7 @@ def main():
             print(f"  → Processing z-stack with {num_slices} slices")
             
             z = 0
-            step = 4
+            step = 5
             while z < num_slices:
                 # Get the current slice
                 slice_image = raw_image[z]
@@ -220,7 +219,7 @@ def main():
                     })
                 
                 z += step
-                step += 1
+                #step += 1
         else:
             # Handle 2D image
             print("  → Processing 2D image")
@@ -281,6 +280,9 @@ def main():
     if not data_for_curation:
         print("\nNo images to process or curate. All done! ✅")
         return
+
+    # Sort data for curation: c1, then c2, etc. to view all crops of a certain number together.
+    data_for_curation.sort(key=lambda item: (int(item['title'].split('-c')[-1]), item['title']))
 
     print(f"\n--- Launching curation for {len(data_for_curation)} images ---")
     controller = CurationController(
